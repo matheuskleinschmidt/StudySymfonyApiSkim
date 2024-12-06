@@ -3,3 +3,9 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+minha_rota:
+    path: /minha-rota
+    controller: App\Controller\MeuController::minhaAcao
+Beaches:
+    path: /minha-rota
+    controller: App\Controller\MeuController::minhaAcao
