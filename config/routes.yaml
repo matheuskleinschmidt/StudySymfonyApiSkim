@@ -7,5 +7,5 @@ minha_rota:
     path: /minha-rota
     controller: App\Controller\MeuController::minhaAcao
 Beaches:
-    path: /minha-rota
-    controller: App\Controller\MeuController::minhaAcao
+    path: /beaches
+    controller: App\Controller\BeachController::listBeaches
