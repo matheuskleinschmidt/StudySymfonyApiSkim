@@ -14,9 +14,7 @@ class AppFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        // 1. Populando Countries
         $countriesData = [
-            // África
             [
                 'name' => 'Nigéria',
                 'iso_code' => 'NG',
@@ -35,7 +33,6 @@ class AppFixtures extends Fixture
                     ['name' => 'Western Cape'],
                 ],
             ],
-            // Ásia
             [
                 'name' => 'Japão',
                 'iso_code' => 'JP',
@@ -54,7 +51,6 @@ class AppFixtures extends Fixture
                     ['name' => 'Karnataka'],
                 ],
             ],
-            // Europa
             [
                 'name' => 'Alemanha',
                 'iso_code' => 'DE',
@@ -73,7 +69,6 @@ class AppFixtures extends Fixture
                     ['name' => 'Provence-Alpes-Côte d\'Azur'],
                 ],
             ],
-            // América do Norte
             [
                 'name' => 'Estados Unidos',
                 'iso_code' => 'US',
@@ -92,7 +87,6 @@ class AppFixtures extends Fixture
                     ['name' => 'Quebec'],
                 ],
             ],
-            // América do Sul
             [
                 'name' => 'Brasil',
                 'iso_code' => 'BR',
@@ -111,7 +105,6 @@ class AppFixtures extends Fixture
                     ['name' => 'Cordoba'],
                 ],
             ],
-            // Austrália
             [
                 'name' => 'Austrália',
                 'iso_code' => 'AU',
@@ -130,7 +123,6 @@ class AppFixtures extends Fixture
                     ['name' => 'Wellington'],
                 ],
             ],
-            // Antártida - Geralmente sem países, mas para fins de seed, adicionaremos entradas fictícias
             [
                 'name' => 'República de Antártida',
                 'iso_code' => 'AQ1',
@@ -162,14 +154,12 @@ class AppFixtures extends Fixture
             $manager->persist($country);
             $countryEntities[$countryData['name']] = $country;
 
-            // Populando States e Cities para cada Country
             foreach ($countryData['states'] as $stateData) {
                 $state = new State();
                 $state->setName($stateData['name']);
                 $state->setCountry($country);
                 $manager->persist($state);
 
-                // Populando algumas Cities para cada State
                 $cities = $this->getSampleCities($countryData['name'], $stateData['name']);
                 foreach ($cities as $cityName) {
                     $city = new City();
@@ -180,7 +170,6 @@ class AppFixtures extends Fixture
             }
         }
 
-        // 2. Populando Facilities
         $facilitiesData = [
             'Banheiros',
             'Estacionamento',
@@ -205,12 +194,10 @@ class AppFixtures extends Fixture
             $manager->persist($facility);
         }
 
-        // 3. Finalizando a Persistência
         $manager->flush();
     }
 
     /**
-     * Retorna uma lista de nomes de cidades com base no país e estado fornecidos.
      *
      * @param string $country
      * @param string $state

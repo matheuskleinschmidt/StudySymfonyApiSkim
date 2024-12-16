@@ -58,7 +58,7 @@ class Beach
     #[Groups(['beach'])]
     private ?string $observation = null;
 
-    #[ORM\OneToMany(targetEntity: Photo::class, mappedBy: 'beach', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Photo::class, mappedBy: 'beach', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EAGER')]
     #[Groups(['beach'])]
     private Collection $photos;
 
@@ -203,7 +203,6 @@ class Beach
     public function removePhoto(Photo $photo): self
     {
         if ($this->photos->removeElement($photo)) {
-            // set the owning side to null (unless already changed)
             if ($photo->getBeach() === $this) {
                 $photo->setBeach(null);
             }

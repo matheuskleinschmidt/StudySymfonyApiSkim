@@ -2,7 +2,6 @@
 
 namespace App\Entity;
 
-use App\Enum\PhotoStorageTypeEnum;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
@@ -13,32 +12,31 @@ class Photo
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'SEQUENCE')]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['photo'])]
+    #[Groups(['beach'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Beach::class, inversedBy: 'photos')]
     #[ORM\JoinColumn(name: 'beach_id', referencedColumnName: 'id', nullable: false)]
-    #[Groups(['photo'])]
     private ?Beach $beach = null;
 
     #[ORM\Column(type: 'string', length: 2048, nullable: true)]
-    #[Groups(['photo'])]
+    #[Groups(['beach'])]
     private ?string $url = null;
 
-    #[ORM\Column(type: 'string', enumType: PhotoStorageTypeEnum::class)]
-    #[Groups(['photo'])]
-    private ?PhotoStorageTypeEnum $storageType = null;
+    #[ORM\Column(type: 'string', nullable: true)]
+    #[Groups(['beach'])]
+    private ?string $storageType = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
-    #[Groups(['photo'])]
+    #[Groups(['beach'])]
     private ?string $base64Data = null;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
-    #[Groups(['photo'])]
-    private ?\DateTimeInterface $createdAt;
+    #[Groups(['beach'])]
+    private ?\DateTimeInterface $createdAt = null;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
-    #[Groups(['photo'])]
+    #[Groups(['beach'])]
     private ?\DateTimeInterface $updatedAt = null;
 
     public function __construct()
@@ -75,12 +73,12 @@ class Photo
         return $this;
     }
 
-    public function getStorageType(): ?PhotoStorageTypeEnum
+    public function getStorageType(): ?string
     {
         return $this->storageType;
     }
 
-    public function setStorageType(PhotoStorageTypeEnum $storageType): self
+    public function setStorageType(?string $storageType): self
     {
         $this->storageType = $storageType;
         return $this;

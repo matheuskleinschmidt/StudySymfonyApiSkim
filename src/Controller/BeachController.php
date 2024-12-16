@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Beach;
 use App\Entity\City;
+use App\Entity\Photo;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -41,33 +42,35 @@ class BeachController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
+        // Validação básica
         if (!$data || !isset($data['name'])) {
             return $this->json(['error' => 'Invalid input data. "name" is required.'], 400);
         }
 
-        // Caso a beach dependa de uma city obrigatória, descomente e ajuste o código
-        // if (!isset($data['city_id'])) {
-        //     return $this->json(['error' => 'Invalid input data. "city_id" is required.'], 400);
-        // }
-        // $city = $entityManager->getRepository(City::class)->find($data['city_id']);
-        // if (!$city) {
-        //     return $this->json(['error' => 'City not found.'], 404);
-        // }
+        // Validação opcional para city_id
+        if (isset($data['city_id'])) {
+            $city = $entityManager->getRepository(City::class)->find($data['city_id']);
+            if (!$city) {
+                return $this->json(['error' => 'City not found.'], 404);
+            }
+        } else {
+            $city = null; // Ou retorne um erro se a cidade for obrigatória
+        }
 
         $beach = new Beach();
         $beach->setName($data['name']);
-        // Descomente e ajuste caso city seja obrigatória
-        // $beach->setCity($city);
         $beach->setAddress($data['address'] ?? null);
         $beach->setGeoCoordinates($data['geoCoordinates'] ?? null);
         $beach->setDescription($data['description'] ?? null);
         $beach->setObservation($data['observation'] ?? null);
         $beach->setStatus($data['status'] ?? null);
         $beach->setPostalCode($data['postalCode'] ?? null);
-        
-        $currentDate = new \DateTime();
-        $beach->setCreatedAt($currentDate);
-        $beach->setUpdatedAt($currentDate);
+        $beach->setCreatedAt(new \DateTime());
+        $beach->setUpdatedAt(new \DateTime());
+
+        if ($city) {
+            $beach->setCity($city);
+        }
 
         $entityManager->persist($beach);
         $entityManager->flush();
@@ -120,14 +123,14 @@ class BeachController extends AbstractController
             $beach->setPostalCode($data['postalCode']);
         }
 
-        // Descomente e ajuste caso city seja necessária
-        // if (isset($data['city_id'])) {
-        //     $city = $entityManager->getRepository(City::class)->find($data['city_id']);
-        //     if (!$city) {
-        //         return $this->json(['error' => 'City not found.'], 404);
-        //     }
-        //     $beach->setCity($city);
-        // }
+        // Atualização opcional para city_id
+        if (isset($data['city_id'])) {
+            $city = $entityManager->getRepository(City::class)->find($data['city_id']);
+            if (!$city) {
+                return $this->json(['error' => 'City not found.'], 404);
+            }
+            $beach->setCity($city);
+        }
 
         $beach->setUpdatedAt(new \DateTime());
 
@@ -150,6 +153,40 @@ class BeachController extends AbstractController
         $entityManager->remove($beach);
         $entityManager->flush();
 
-        return $this->json(['message' => 'Beach deleted successfully'], 204);
+        // Retornar 204 No Content sem corpo
+        return new JsonResponse(null, 204);
+    }
+
+    #[Route('/beaches/{id}/photos', name: 'beaches_add_photo', methods: ['POST'])]
+    public function addPhotoToBeach(Request $request, ManagerRegistry $doctrine, int $id): JsonResponse
+    {
+        $entityManager = $doctrine->getManager();
+        $beach = $entityManager->getRepository(Beach::class)->find($id);
+
+        if (!$beach) {
+            return $this->json(['error' => 'Beach not found'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (!$data || !isset($data['url']) || !isset($data['storageType'])) {
+            return $this->json(['error' => 'Invalid input data. "url" and "storageType" are required.'], 400);
+        }
+
+        $photo = new Photo();
+        $photo->setBeach($beach);
+        $photo->setUrl($data['url']);
+        $photo->setStorageType($data['storageType']);
+        $photo->setCreatedAt(new \DateTime());
+
+        // Opcional: definir base64Data se for necessário
+        if (isset($data['base64Data'])) {
+            $photo->setBase64Data($data['base64Data']);
+        }
+
+        $entityManager->persist($photo);
+        $entityManager->flush();
+
+        return $this->json($photo, 201, [], ['groups' => ['beach']]);
     }
 }
