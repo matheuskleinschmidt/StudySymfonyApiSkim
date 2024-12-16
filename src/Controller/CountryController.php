@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Country;
+use App\Entity\Continent;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,7 +17,7 @@ class CountryController extends AbstractController
     public function listCountries(ManagerRegistry $doctrine): JsonResponse
     {
         $countries = $doctrine->getRepository(Country::class)->findAll();
-        return $this->json($countries, 200, []);
+        return $this->json($countries, 200);
     }
 
     #[Route('/{id}', name: 'countries_show', methods: ['GET'])]
@@ -28,24 +29,27 @@ class CountryController extends AbstractController
             return $this->json(['error' => 'Country not found'], 404);
         }
 
-        return $this->json($country, 200, []);
+        return $this->json($country, 200);
     }
 
     #[Route('', name: 'countries_create', methods: ['POST'])]
     public function createCountry(Request $request, ManagerRegistry $doctrine): JsonResponse
     {
-        $entityManager = $doctrine->getManager();
         $data = json_decode($request->getContent(), true);
+        if (!$data || !isset($data['name']) || !isset($data['continent_id'])) {
+            return $this->json(['error' => 'Invalid input data. "name" and "continent_id" are required.'], 400);
+        }
 
-        if (!$data || !isset($data['name'])) {
-            return $this->json(['error' => 'Invalid input data. "name" is required.'], 400);
+        $entityManager = $doctrine->getManager();
+        $continent = $entityManager->getRepository(Continent::class)->find($data['continent_id']);
+        if (!$continent) {
+            return $this->json(['error' => 'Continent not found'], 404);
         }
 
         $country = new Country();
         $country->setName($data['name']);
         $country->setIsoCode($data['isoCode'] ?? null);
-        // Caso exista um campo "continent" como string:
-        $country->setContinent($data['continent'] ?? null);
+        $country->setContinent($continent);
 
         $entityManager->persist($country);
         $entityManager->flush();
@@ -71,11 +75,17 @@ class CountryController extends AbstractController
         if (isset($data['name'])) {
             $country->setName($data['name']);
         }
+
         if (array_key_exists('isoCode', $data)) {
             $country->setIsoCode($data['isoCode']);
         }
-        if (array_key_exists('continent', $data)) {
-            $country->setContinent($data['continent']);
+
+        if (isset($data['continent_id'])) {
+            $continent = $entityManager->getRepository(Continent::class)->find($data['continent_id']);
+            if (!$continent) {
+                return $this->json(['error' => 'Continent not found'], 404);
+            }
+            $country->setContinent($continent);
         }
 
         $entityManager->flush();

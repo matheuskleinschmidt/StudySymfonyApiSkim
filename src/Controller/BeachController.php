@@ -42,19 +42,17 @@ class BeachController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        // Validação básica
         if (!$data || !isset($data['name'])) {
             return $this->json(['error' => 'Invalid input data. "name" is required.'], 400);
         }
 
-        // Validação opcional para city_id
         if (isset($data['city_id'])) {
             $city = $entityManager->getRepository(City::class)->find($data['city_id']);
             if (!$city) {
                 return $this->json(['error' => 'City not found.'], 404);
             }
         } else {
-            $city = null; // Ou retorne um erro se a cidade for obrigatória
+            $city = null;
         }
 
         $beach = new Beach();
@@ -123,7 +121,6 @@ class BeachController extends AbstractController
             $beach->setPostalCode($data['postalCode']);
         }
 
-        // Atualização opcional para city_id
         if (isset($data['city_id'])) {
             $city = $entityManager->getRepository(City::class)->find($data['city_id']);
             if (!$city) {
@@ -153,7 +150,6 @@ class BeachController extends AbstractController
         $entityManager->remove($beach);
         $entityManager->flush();
 
-        // Retornar 204 No Content sem corpo
         return new JsonResponse(null, 204);
     }
 
@@ -179,7 +175,6 @@ class BeachController extends AbstractController
         $photo->setStorageType($data['storageType']);
         $photo->setCreatedAt(new \DateTime());
 
-        // Opcional: definir base64Data se for necessário
         if (isset($data['base64Data'])) {
             $photo->setBase64Data($data['base64Data']);
         }
