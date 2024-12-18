@@ -14,12 +14,33 @@ use Symfony\Component\Routing\Annotation\Route;
 class BeachController extends AbstractController
 {
     #[Route('/beaches', name: 'beaches_list', methods: ['GET'])]
-    public function listBeaches(ManagerRegistry $doctrine): JsonResponse
+    public function listBeaches(ManagerRegistry $doctrine, Request $request): JsonResponse
     {
-        $repository = $doctrine->getRepository(Beach::class);
-        $beaches = $repository->findAll();
+        $page  = max(1, (int)$request->query->get('page', 1));
+        $limit = max(1, (int)$request->query->get('limit', 10));
 
-        return $this->json($beaches, 200, [], ['groups' => ['beach']]);
+        $offset = ($page - 1) * $limit;
+
+        $repository = $doctrine->getRepository(Beach::class);
+
+        $totalItems = $repository->count([]);
+
+        $queryBuilder = $repository->createQueryBuilder('b')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit);
+
+        $beaches = $queryBuilder->getQuery()->getResult();
+        $responseData = [
+            'beaches' => $beaches,
+            'meta' => [
+                'current_page' => $page,
+                'limit'        => $limit,
+                'total_items'  => $totalItems,
+                'total_pages'  => ceil($totalItems / $limit),
+            ],
+        ];
+
+        return $this->json($responseData, 200, [], ['groups' => ['beach']]);
     }
 
     #[Route('/beaches/{id}', name: 'beaches_show', methods: ['GET'])]

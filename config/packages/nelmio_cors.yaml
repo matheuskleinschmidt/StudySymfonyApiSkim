@@ -1,11 +1,8 @@
 nelmio_cors:
     defaults:
-        allow_origin: ['http://localhost:3001'] # Permitir origem específica
-        allow_headers: ['Content-Type', 'Authorization']
-        allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
         max_age: 3600
     paths:
-        '^/': # Habilitar CORS para a rota específica
-            allow_origin: ['http://localhost:3001','http://localhost:3002']
-            allow_headers: ['Content-Type', 'Authorization']
-            allow_methods: ['GET', 'POST', 'OPTIONS']
+        '^/': 
+            allow_origin: ['*']
+            allow_headers: ['*']
+            allow_methods: ['POST', 'PUT', 'GET', 'DELETE']

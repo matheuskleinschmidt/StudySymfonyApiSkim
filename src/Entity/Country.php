@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'countries')]
@@ -11,16 +12,20 @@ class Country
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'SEQUENCE')]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['beach'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Groups(['beach'])]
     private ?string $name = null;
 
     #[ORM\Column(type: 'string', length: 10, nullable: true)]
+    #[Groups(['beach'])]
     private ?string $isoCode = null;
 
     #[ORM\ManyToOne(targetEntity: Continent::class)]
     #[ORM\JoinColumn(name: 'continent_id', referencedColumnName: 'id', nullable: false)]
+    #[Groups(['beach'])]
     private ?Continent $continent = null;
 
     public function getId(): ?int
