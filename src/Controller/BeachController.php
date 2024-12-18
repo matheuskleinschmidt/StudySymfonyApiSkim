@@ -14,34 +14,70 @@ use Symfony\Component\Routing\Annotation\Route;
 class BeachController extends AbstractController
 {
     #[Route('/beaches', name: 'beaches_list', methods: ['GET'])]
-    public function listBeaches(ManagerRegistry $doctrine, Request $request): JsonResponse
-    {
-        $page  = max(1, (int)$request->query->get('page', 1));
-        $limit = max(1, (int)$request->query->get('limit', 10));
+public function listBeaches(ManagerRegistry $doctrine, Request $request): JsonResponse
+{
+    $page         = max(1, (int)$request->query->get('page', 1));
+    $limit        = max(1, (int)$request->query->get('limit', 10));
+    $cityId       = $request->query->get('city_id');
+    $stateId      = $request->query->get('state_id');
+    $countryId    = $request->query->get('country_id');
+    $continentId  = $request->query->get('continent_id');
 
-        $offset = ($page - 1) * $limit;
+    $offset = ($page - 1) * $limit;
 
-        $repository = $doctrine->getRepository(Beach::class);
+    $repository = $doctrine->getRepository(Beach::class);
 
-        $totalItems = $repository->count([]);
+    $qb = $repository->createQueryBuilder('b')
+        ->leftJoin('b.city', 'c')
+        ->leftJoin('c.state', 's')
+        ->leftJoin('s.country', 'co')
+        ->leftJoin('co.continent', 'cnt')
+        ->setFirstResult($offset)
+        ->setMaxResults($limit);
 
-        $queryBuilder = $repository->createQueryBuilder('b')
-            ->setFirstResult($offset)
-            ->setMaxResults($limit);
-
-        $beaches = $queryBuilder->getQuery()->getResult();
-        $responseData = [
-            'beaches' => $beaches,
-            'meta' => [
-                'current_page' => $page,
-                'limit'        => $limit,
-                'total_items'  => $totalItems,
-                'total_pages'  => ceil($totalItems / $limit),
-            ],
-        ];
-
-        return $this->json($responseData, 200, [], ['groups' => ['beach']]);
+    if ($cityId) {
+        $qb->andWhere('c.id = :cityId')
+           ->setParameter('cityId', $cityId);
     }
+
+    if ($stateId) {
+        $qb->andWhere('s.id = :stateId')
+           ->setParameter('stateId', $stateId);
+    }
+
+    if ($countryId) {
+        $qb->andWhere('co.id = :countryId')
+           ->setParameter('countryId', $countryId);
+    }
+
+    if ($continentId) {
+        $qb->andWhere('cnt.id = :continentId')
+           ->setParameter('continentId', $continentId);
+    }
+
+    $beaches = $qb->getQuery()->getResult();
+
+    $countQb = clone $qb;
+    $countQb->select('COUNT(b.id)')
+        ->setFirstResult(null)
+        ->setMaxResults(null);
+
+    $totalItems = $countQb->getQuery()->getSingleScalarResult();
+
+    $responseData = [
+        'beaches' => $beaches,
+        'meta' => [
+            'current_page' => $page,
+            'limit'        => $limit,
+            'total_items'  => $totalItems,
+            'total_pages'  => ceil($totalItems / $limit),
+        ],
+    ];
+
+    return $this->json($responseData, 200, [], ['groups' => ['beach']]);
+}
+
+    
 
     #[Route('/beaches/{id}', name: 'beaches_show', methods: ['GET'])]
     public function showBeach(ManagerRegistry $doctrine, int $id): JsonResponse
